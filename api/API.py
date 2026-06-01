@@ -1,30 +1,37 @@
 from dotenv import load_dotenv
 import os
-import json
 import requests
-from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
 
+BASE_URL = "https://api.datasectors.com/api/chart/price"
+
 headers = {
     "X-API-Key": API_KEY
 }
 
-url = "https://api.datasectors.com/api/chart/price"
 
+def get_stock_data(symbol, start_date, end_date, limit=500):
+    params = {
+        "symbol": symbol,
+        "interval": "1d",
+        "limit": limit
+    }
 
-params = {
-    "symbol": "IDX:BBCA",
-    "interval": "1d",
-    "from": "2026-05-25",
-    "to": "2026-05-31",
-    "limit": 1000
-}
+    response = requests.get(BASE_URL, headers=headers, params=params)
+    data = response.json()
 
-response = requests.get(url, headers=headers, params=params)
+    if not data.get("data"):
+        print("No data received")
+        return []
+  
+    filtered = []
+    for d in data["data"]:
+        date = d["datetime"][:10]
+        if start_date <= date <= end_date:
+            filtered.append(d)
 
-data = response.json()
-print(json.dumps(data, indent=2))
-
+    return filtered
